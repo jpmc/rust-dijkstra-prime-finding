@@ -7,23 +7,82 @@ const FIRST_100: &str = "2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
 fn main() {
 
     const SAMPLE: u64 = 100_000;
+
     let now = std::time::Instant::now();
+    println!("\ndijkstra_naive");
     let primes = dijkstra_naive(SAMPLE);
     let elapsed = now.elapsed();
     println!("DEBUG: Elapsed: {:.2?}", elapsed);
-    //print_vec(primes);
-    println!("Primes Found: {}\n", primes.len());
+    println!("Primes Found: {}", primes.len());
 
     let now = std::time::Instant::now();
+    println!("\ndijkstra_attempt_1");
     let primes = dijkstra_attempt_1(SAMPLE);
     let elapsed = now.elapsed();
     println!("DEBUG: Elapsed: {:.2?}", elapsed);
-    //print_vec(primes);
     println!("Primes Found: {}", primes.len());
+    //(primes);
 
-    //println!("\nHard-coded Comparison Results:");
-    //println!("{}", FIRST_100);
+    let now = std::time::Instant::now();
+    println!("\ndijkstra_attempt_2");
+    let primes = dijkstra_attempt_2(SAMPLE);
+    let elapsed = now.elapsed();
+    println!("DEBUG: Elapsed: {:.2?}", elapsed);
+    println!("Primes Found: {}", primes.len());
+    //println!("{:?}", primes)
+    //print_vec(primes);
+}
 
+// Attempt 2: Add 3rd tuple value (prime, prime^2, multiple), "skip" evens.
+// * We determined that instead of the "global sqrt" from Attempt 1, that individualized sqrt(N)
+//   saves iterations+time.
+// * However, to save from individualized (value > sqrt(N)) checks, we rewrite it to (value^2 > N).
+// * Furthermore, to save on multiplications-in-iteration, we simply use a 3rd u64 value stored in
+//   the tuple that is fixed at prime^2, as a permanent sqrt(N) check avoidance measure.
+// - We now skip every even iteration in full, in exchange for a single "if" check on (n+1) to keep
+//   the multiples bookkeeping intact.
+fn dijkstra_attempt_2(upto: u64) -> Vec<(u64, u64, u64)> {
+    // !! Removed "global sqrt".
+    let size: usize = prime_count_upper_bound(upto) as usize;
+    let mut pool: Vec<(u64, u64, u64)> = Vec::with_capacity(size).clone();
+    pool.resize(size, (0, 0, 0));
+    // !! Pre-populate the "multiple" for 2 up to the maximum multiple value in an effort to "skip" it.
+    pool[0] = (2, 4, upto.next_multiple_of(2));
+
+    let mut index = 1;
+    // !! Introduced ".step_by(2)" to skip iterations on even numbers.
+    for n in (3..=upto).step_by(2) {
+        let mut add_to_pool: bool = true;
+        for tuple in &mut pool {
+            // !! Using new "prime^2" tuple member to do a personalized (value > sqrt(N)) check.
+            if tuple.0 == 0 || tuple.1 > n {
+                break;
+            }
+            // Pool sweep to update multiples if a composite is found.
+            if n >= tuple.2 {
+                add_to_pool = false;
+                tuple.2 += tuple.0;
+            }
+            // !! In order to "skip" multiples of 2, we need to take into account if the even entry
+            //    would have tripped incrementing the multiple index for a tuple.
+            if (n + 1) >= tuple.2 {
+                tuple.2 = (n+2).next_multiple_of(tuple.0);
+            }
+        }
+
+        if add_to_pool {
+            pool[index] = (n, n * n, n * n);
+            index += 1;
+        }
+    }
+
+    println!("DEBUG: Removed {} dead tuples.", pool.len() - index);
+    for _ in index..pool.len() {
+        pool.pop();
+    }
+    println!("DEBUG: {} primes found.", pool.len());
+    //println!("{:?}", pool);
+    pool
 }
 
 // Attempt 1: Add global sqrt boundary to speed up iterations.
