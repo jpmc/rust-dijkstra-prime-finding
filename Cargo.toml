@@ -3,6 +3,20 @@ name = "rust-djikstra-primes"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# Multiple binary splitting per implementation.
+# Credit: https://stackoverflow.com/a/36604610/4147290
+[[bin]]
+name = "d_naive"
+path = "src/impls/dijkstra_naive.rs"
 
-[dependencies]
+[[bin]]
+name = "d_a1"
+path = "src/impls/dijkstra_attempt_1.rs"
+
+[[bin]]
+name = "d_a2"
+path = "src/impls/dijkstra_attempt_2.rs"
+
+[[bin]]
+name = "d_a3"
+path = "src/impls/dijkstra_attempt_3.rs"

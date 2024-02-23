@@ -20,3 +20,8 @@ Additionally, see the [Benchmarking section of the Readme](readme.md#0---benchma
 | dijkstra_attempt_1 | 79.86ms      | 66.9x                |                                                             |
 | dijkstra_attempt_2 | 34.25ms      | 156.2x               | Increased tuple storage from (u64, u64) to (u64, u64, u64). |
 | dijkstra_attempt_3 |              |                      |                                                             |
+
+r 111111
+x 111
+b 11
+c 1111
